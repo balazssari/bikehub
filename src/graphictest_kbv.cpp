@@ -1,7 +1,7 @@
-#include "src\MCUFRIEND\MCUFRIEND_kbv.h"
-#include "src\MCUFRIEND\fonts\FreeDefaultFonts.h"
-#include "src\MCUFRIEND\fonts\FreeSerifBoldItalic24pt7b.h"
-#include "src\MCUFRIEND\fonts\FreeSerif18pt7b.h"    //height=22,width=18
+#include "MCUFRIEND/MCUFRIEND_kbv.h"
+#include "MCUFRIEND/fonts/FreeDefaultFonts.h"
+#include "MCUFRIEND/fonts/FreeSerifBoldItalic24pt7b.h"
+#include "MCUFRIEND/fonts/FreeSerif18pt7b.h"    //height=22,width=18
 
 MCUFRIEND_kbv tft;
 
@@ -38,50 +38,53 @@ int touchTrig = 0;
 uint16_t liftCtr = 0;
 int isNumPadOn = 0;
 uint32_t output_num = 0;
+uint8_t system_state = 0;
 
 void setup(void);
 void loop(void);
 
+//functions related to HW setup:
+void lcd_on(void);
+void lcd_off(void);
+void lcd_setbacklight(uint8_t backlight);
+void gpioInit(void);
 //functions related to graphics:
 void drawUI();
 void drawNumpad(uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth);
 void _drawInputsFeedback(uint16_t xpos, uint16_t ypos, uint16_t thickness, uint16_t height, uint16_t COLOR);
 void _drawVeloMetric(uint8_t speed, uint16_t COLOR);
 void drawToScreen(void);
-
+void drawWelcome(void);
 //functions related to numPadHandler():
 uint16_t * readTouch(uint8_t threshold);
 uint8_t numpadTouchHandler(uint16_t axes[2], uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth);
 void numpadFeedback(uint8_t num,uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth, uint16_t COLOR);
 void numPadHandler(void);
+//functions related to uiHandler():
+void uiHandler(void);
 
 
 void setup(void) {
-    pinMode(PB4, OUTPUT);
-    pinMode(PB14, OUTPUT);
-    
-    digitalWrite(PB4,HIGH);
-    HAL_Delay(10);
-    uint16_t ID = tft.readID(); //
-    tft.begin(ID);
-    tft.setRotation(1);
-    tft.fillScreen(LOCKPAGE_BGCOLOR);
-    tft.setFont(&FreeSerif18pt7b);
-    tft.setTextSize(0);
-    tft.setTextColor(LOCKPAGE_TEXTCOLOR);
-    tft.setCursor(0, (1*22)+(1*2));
-    tft.print("Welcome!");
-    tft.setCursor(0, (2*22)+(3*2));
-    tft.print("Pass:");
-    // tft.fillScreen(BLACK);
-    // drawUI();
-    drawNumpad(220,30,50,50);
-    isNumPadOn = 1;
-    digitalWrite(PB14, HIGH);
+    gpioInit();
+    lcd_on();
+    drawWelcome();
+    lcd_setbacklight(100);
 }
 
 void loop(void) {
-    numPadHandler();
+    switch (system_state)
+    {
+    case 0:
+        numPadHandler();
+        break;
+    case 1:
+        uiHandler();
+        break;
+    
+    default:
+        break;
+    }
+    
 
 
 }
@@ -325,4 +328,37 @@ void drawNumpad(uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth){
     tft.setCursor(x+bwidth*2+(bwidth/2)-numWidth, y+bheight*3+(bheight/2)+numHeight/2);
     tft.print("ok");
 
+}
+void drawWelcome(void){
+    tft.fillScreen(LOCKPAGE_BGCOLOR);
+    tft.setFont(&FreeSerif18pt7b);
+    tft.setTextSize(0);
+    tft.setTextColor(LOCKPAGE_TEXTCOLOR);
+    tft.setCursor(0, (1*22)+(1*2));
+    tft.print("Welcome!");
+    tft.setCursor(0, (2*22)+(3*2));
+    tft.print("Pass:");
+    drawNumpad(220,30,50,50);
+    isNumPadOn = 1;
+}
+void gpioInit(void){
+    pinMode(PB4, OUTPUT);
+    pinMode(PB14, OUTPUT);
+}
+void lcd_on(void){
+    digitalWrite(PB4, LOW);
+    uint16_t ID = tft.readID();
+    tft.begin(ID);
+    tft.setRotation(1);
+}
+void lcd_setbacklight(uint8_t backlight){
+    if(backlight == 100){
+        digitalWrite(PB14, HIGH);
+    }
+}
+void lcd_off(void){
+    digitalWrite(PB4, LOW);
+}
+void uiHandler(void){
+    drawUI();
 }
