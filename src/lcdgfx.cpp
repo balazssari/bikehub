@@ -10,23 +10,40 @@ void drawUI(){
 void drawNumpad(uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth){
     int numHeight = 24;
     int numWidth = 18;
-    
-    //drawing rectangles
-    tft.drawRect(x,             y,              bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth,      y,              bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth*2 ,   y,              bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    int bPadding = 4;
+    int radius = 8;
+    //drawing rectangles:
+    // tft.drawRect(x,             y,              bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth,      y,              bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth*2 ,   y,              bwidth,     bheight,    NUMPAD_TABLECOLOR);
 
-    tft.drawRect(x,             y+bheight,      bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth,      y+bheight,      bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth*2,    y+bheight,      bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x,             y+bheight,      bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth,      y+bheight,      bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth*2,    y+bheight,      bwidth,     bheight,    NUMPAD_TABLECOLOR);
 
-    tft.drawRect(x,             y+bheight*2,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth,      y+bheight*2,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth*2,    y+bheight*2,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x,             y+bheight*2,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth,      y+bheight*2,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth*2,    y+bheight*2,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
     
-    tft.drawRect(x,             y+bheight*3,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth,      y+bheight*3,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
-    tft.drawRect(x+bwidth*2,    y+bheight*3,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x,             y+bheight*3,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth,      y+bheight*3,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    // tft.drawRect(x+bwidth*2,    y+bheight*3,    bwidth,     bheight,    NUMPAD_TABLECOLOR);
+    //drawing filled rectangles with radius:
+    tft.fillRoundRect(x+bPadding,             y+bPadding,              bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth+bPadding,      y+bPadding,              bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth*2+bPadding ,   y+bPadding,              bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+
+    tft.fillRoundRect(x+bPadding,             y+bheight+bPadding,      bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth+bPadding,      y+bheight+bPadding,      bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth*2+bPadding,    y+bheight+bPadding,      bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+
+    tft.fillRoundRect(x+bPadding,             y+bheight*2+bPadding,    bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth+bPadding,      y+bheight*2+bPadding,    bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth*2+bPadding,    y+bheight*2+bPadding,    bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    
+    tft.fillRoundRect(x+bPadding,             y+bheight*3+bPadding,    bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth+bPadding,      y+bheight*3+bPadding,    bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
+    tft.fillRoundRect(x+bwidth*2+bPadding,    y+bheight*3+bPadding,    bwidth-bPadding*2,     bheight-bPadding*2,   radius,    NUMPAD_TABLECOLOR);
     //filling up with numbers
     tft.setTextColor(NUMPAD_NUMCOLOR, NUMPAD_NUMBGCOLOR);
     tft.setTextSize(0);
@@ -70,5 +87,5 @@ void drawWelcome(void){
     tft.print("Welcome!");
     tft.setCursor(0, (2*22)+(3*2));
     tft.print("Pass:");
-    drawNumpad(220,30,50,50);
+    drawNumpad(220,10,54,54);
 }

@@ -15,15 +15,20 @@
 #define WHITE   0xFFFF
 #define PINK    0xF2FF
 #define GREY    0xBDD7
+#define BLUEGREY 0x10C5
 
-#define LOCKPAGE_BGCOLOR      BLACK
+#define LOCKPAGE_BGCOLOR      0x0842
 #define LOCKPAGE_TEXTCOLOR    WHITE
 #define LOCKPAGE_TEXTBGCOLOR  BLACK
 #define LOCKPAGE_NUMCOLOR     GREEN
-#define LOCKPAGE_NUMBGCOLOR   BLACK
-#define NUMPAD_TABLECOLOR     BLACK
-#define NUMPAD_NUMCOLOR       CYAN
+#define LOCKPAGE_NUMBGCOLOR   0x0842
+#define NUMPAD_TABLECOLOR     BLUEGREY
+#define NUMPAD_NUMCOLOR       WHITE
 #define NUMPAD_NUMBGCOLOR     BLACK
+
+#define VARV_CRANKRPM_ROW     1
+#define VARV_COLUMN_1         180
+#define VARV_COLUMN_2         350
 
 void drawUI();
 void drawNumpad(uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth);

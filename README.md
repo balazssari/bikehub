@@ -10,17 +10,17 @@ What is done:
     Resistive touch panel with 4 wire output.
     Basic working:
     Imagine the touch panel as 4 resistors connected in star topology: 
-                    y1
-                    |
-                   | |
-                   | |
-           ____     |     ____
-    x1----|____|----|----|____|----x2
-                    |
-                   | |
-                   | |
-                    |
-                    y2
+/                    y1
+/                    |
+/                   | |
+/                   | |
+/           ____     |     ____
+/    x1----|____|----|----|____|----x2
+/                    |
+/                   | |
+/                   | |
+/                    |
+/                    y2
     For reading out y axis value we need to measure with ADC on either x1 or x2 point.
     If we chose to connect ADC to x2 we need to set x1 to INPUT or high impedance with the MCU.
     Furthermore, we need to set y1 to HIGH level and y2 to LOW voltage level or vice versa.
@@ -38,4 +38,4 @@ What needs to be done:
 - Modify values over UART
 - Create UI for value editing
 - Get analog inputs working
-- 
+- Buy multiple Pedal Assist Sensors and try to interface with them

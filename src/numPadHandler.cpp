@@ -18,7 +18,7 @@ uint16_t liftCtr = 0;
 int isNumPadOn = 0;
 uint32_t output_num = 0;
 
-uint8_t numPadHandler(void){
+uint32_t numPadHandler(void){
     axes = readTouch(20);
 
     if((axes[0] < 700) || (axes[1] < 820)){
@@ -37,13 +37,12 @@ uint8_t numPadHandler(void){
             isHoldDetected = 0;
             liftCtr = 0;
         }
-
     }
     if(touchTrig == 1){
         ctr++;
         if(isNumPadOn == 1){
         }
-        num = numpadTouchHandler(axes,220, 30, 50, 50);
+        num = numpadTouchHandler(axes,220,10,54,54);
         if(num == 10){  //delete if del button pressed
             if(numCtr == 0){
 
@@ -84,7 +83,7 @@ uint8_t numPadHandler(void){
                 tft.print("Welcome!");
                 tft.setCursor(0, (2*22)+(3*2));
                 tft.print("Pass:");
-                drawNumpad(220,30,50,50);
+                drawNumpad(220,10,54,54);
                 isNumPadOn = 1;
             }
         }
@@ -105,13 +104,7 @@ uint8_t numPadHandler(void){
                     tft.print(numArr[i]);
                     }
                 }  
-        // numpadFeedback(num,100,30,50,50,COLOR);
-        }
-        // tft.fillRect(0,200,50,30,LOCKPAGE_NUMBGCOLOR);
-        // tft.setCursor(0, 200);
-        // tft.setTextColor(LOCKPAGE_NUMCOLOR);
-        // tft.setTextSize(0);
-        // tft.print(ctr);
+            }
          touchTrig = 0;
     }
 }
