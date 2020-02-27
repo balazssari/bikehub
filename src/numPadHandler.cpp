@@ -2,8 +2,11 @@
 #include "numPadHandler.h"
 #include "touch.h"
 #include "lcdgfx.h"
+#include "systemstates.h"
 
 extern MCUFRIEND_kbv tft;
+
+extern uint8_t system_state;
 
 uint32_t passcode = 12345678;
 uint16_t * axes;
@@ -19,7 +22,7 @@ int isNumPadOn = 0;
 uint32_t output_num = 0;
 
 uint32_t numPadHandler(void){
-    axes = readTouch(20);
+   axes = readTouch(20);
 
     if((axes[0] < 700) || (axes[1] < 820)){
         if(isTouchDetected == 0){
@@ -42,70 +45,84 @@ uint32_t numPadHandler(void){
         ctr++;
         if(isNumPadOn == 1){
         }
-        num = numpadTouchHandler(axes,220,10,54,54);
-        if(num == 10){  //delete if del button pressed
-            if(numCtr == 0){
+        switch (system_state)
+        {
+        case LOCKSCREEN:
+            num = numpadTouchHandler(axes,220,10,54,54);
+            if(num == 10){  //delete if del button pressed
+                if(numCtr == 0){
 
-            }
-            else{
-                numCtr--;
-                tft.setCursor(0+numCtr*18, 100);
-                tft.setTextColor(LOCKPAGE_NUMBGCOLOR);
-                tft.setTextSize(0);
-                tft.print(numArr[numCtr]);
-                numArr[numCtr] = 0;
-                for(int i = 0; i < numCtr; i++){
-                    tft.setTextColor(LOCKPAGE_NUMCOLOR,LOCKPAGE_NUMBGCOLOR);
-                    tft.setCursor(0+i*18, 100);
-                    tft.print(numArr[i]);
+                }
+                else{
+                    numCtr--;
+                    tft.setCursor(0+numCtr*18, 100);
+                    tft.setTextColor(LOCKPAGE_NUMBGCOLOR);
+                    tft.setTextSize(0);
+                    tft.print(numArr[numCtr]);
+                    numArr[numCtr] = 0;
+                    for(int i = 0; i < numCtr; i++){
+                        tft.setTextColor(LOCKPAGE_NUMCOLOR,LOCKPAGE_NUMBGCOLOR);
+                        tft.setCursor(0+i*18, 100);
+                        tft.print(numArr[i]);
+                    }
                 }
             }
-        }
-        else if (num == 12){ //ok button pressed, sum numbers
-            output_num = numArr[7]*1 + numArr[6]*10 + numArr[5]*100 + numArr[4]*1000 + numArr[3]*10000 + numArr[2]*100000 + numArr[1]*1000000 + numArr[0]*10000000;
-            HAL_Delay(1);
-            if (output_num == passcode){
-                return 0xFF;
+            else if (num == 12){ //ok button pressed, sum numbers
+                output_num = numArr[7]*1 + numArr[6]*10 + numArr[5]*100 + numArr[4]*1000 + numArr[3]*10000 + numArr[2]*100000 + numArr[1]*1000000 + numArr[0]*10000000;
+                delay(1);
+                if (output_num == passcode){
+                    return 0xFF;
+                }
+                else{
+                    memset(numArr, 0, sizeof numArr);
+                    numCtr = 0;
+                    tft.fillScreen(BLACK);
+                    tft.setTextColor(RED,BLACK);
+                    tft.setCursor(150, 100);
+                    tft.print("Wrong passcode");
+                    HAL_Delay(3000);
+                    tft.fillScreen(LOCKPAGE_BGCOLOR);
+                    setFontSerif18();
+                    tft.setTextSize(0);
+                    tft.setTextColor(LOCKPAGE_TEXTCOLOR);
+                    tft.setCursor(0, (1*22)+(1*2));
+                    tft.print("Welcome!");
+                    tft.setCursor(0, (2*22)+(3*2));
+                    tft.print("Pass:");
+                    drawNumpad(220,10,54,54);
+                    isNumPadOn = 1;
+                }
             }
-            else{
-                memset(numArr, 0, sizeof numArr);
-                numCtr = 0;
-                tft.fillScreen(BLACK);
-                tft.setTextColor(RED,BLACK);
-                tft.setCursor(150, 100);
-                tft.print("Wrong passcode");
-                HAL_Delay(3000);
-                tft.fillScreen(LOCKPAGE_BGCOLOR);
-                tft.setFont(&FreeSerif18pt7b);
-                tft.setTextSize(0);
-                tft.setTextColor(LOCKPAGE_TEXTCOLOR);
-                tft.setCursor(0, (1*22)+(1*2));
-                tft.print("Welcome!");
-                tft.setCursor(0, (2*22)+(3*2));
-                tft.print("Pass:");
-                drawNumpad(220,10,54,54);
-                isNumPadOn = 1;
-            }
-        }
-        else if (num == 13){ //touch location out of numpad region, do nothing
+            else if (num == 13){ //touch location out of numpad region, do nothing
 
-        }
-        else{
-            numArr[numCtr] = num;
-            numCtr++;
-            if(numCtr > 8){
-                numCtr = 8;
             }
             else{
-                tft.setTextSize(0);
-                for(int i = 0; i < numCtr; i++){
-                    tft.setTextColor(LOCKPAGE_NUMCOLOR,LOCKPAGE_NUMBGCOLOR);
-                    tft.setCursor(0+i*18, 100);
-                    tft.print(numArr[i]);
-                    }
-                }  
-            }
-         touchTrig = 0;
+                numArr[numCtr] = num;
+                numCtr++;
+                if(numCtr > 8){
+                    numCtr = 8;
+                }
+                else{
+                    tft.setTextSize(0);
+                    for(int i = 0; i < numCtr; i++){
+                        tft.setTextColor(LOCKPAGE_NUMCOLOR,LOCKPAGE_NUMBGCOLOR);
+                        tft.setCursor(0+i*18, 100);
+                        tft.print(numArr[i]);
+                        }
+                    }  
+                }
+            
+            break;
+        case MAIN:
+        
+            break;
+        case VAR_VIEWER:
+
+            break;
+        default:
+            break;
+        }
+    touchTrig = 0;
     }
 }
 uint8_t numpadTouchHandler(uint16_t axes[2], uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth){

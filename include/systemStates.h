@@ -1,7 +1,8 @@
 #define INIT_SYS            0
 #define INIT_LOCKSCREEN     1
 #define LOCKSCREEN          2
-#define MAIN                3
+#define INIT_MAIN           3
+#define MAIN                4
 #define INIT_VAR_VIEWER     99
 #define VAR_VIEWER          100
 

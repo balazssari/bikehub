@@ -1,20 +1,37 @@
 #include "main.h"
 
-#define debug
-#define VAR_VIEWER_UPDATE_TIME 1000
+//#define debug
+#define VAR_VIEWER_UPDATE_TIME 10
+
+STM32RTC& rtc = STM32RTC::getInstance();
 
 extern MCUFRIEND_kbv tft;
 HardwareSerial Serial3(USART3);
 VescUart UART;
 
-uint8_t system_state = INIT_SYS;
-
-
+uint8_t system_state = INIT_MAIN;
+	struct dataPackage {
+		float avgMotorCurrent;
+		float avgInputCurrent;
+		float dutyCycleNow;
+		long rpm;
+		float inpVoltage;
+		float ampHours;
+		float ampHoursCharged;
+		long tachometer;
+		long tachometerAbs;
+	};
+struct dataPackage prevPackage;
+struct dataPackage Package;
 uint32_t elapsedTime = 0; 
 uint32_t sysTime = 0;
 uint32_t prevsysTime = 0;
 uint32_t screenTime = 0;
 uint32_t prevscreenTime = 0;
+uint8_t varviewerStep = 0;
+uint8_t rtctime[4];
+
+
 
 void setup(void);
 void loop(void);
@@ -26,14 +43,29 @@ void lcd_setbacklight(uint8_t backlight);
 void gpioInit(void);
 void drawVarviewer(void);
 void varviewerHandler(void);
+void drawMain(void);
+void print2digits(int number);
+void mainHandler(void);
+int fillArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, unsigned int colour);
 
 void setup(void) {
+    rtc.setClockSource(STM32RTC::LSE_CLOCK);
+    rtc.begin();
+    rtc.setHours(20);
+    rtc.setMinutes(59);
+    rtc.setSeconds(0);
     pasInit();
     Serial3.begin(19200);
     UART.setSerialPort(&Serial3);
+
+            gpioInit();
+        lcd_on();
+        lcd_setbacklight(100);
+
 }
 
 void loop(void) {
+
     sysTime = millis();
     pasHandler();
     switch (system_state)
@@ -53,11 +85,15 @@ void loop(void) {
         break;
     case LOCKSCREEN:
         if (numPadHandler() == 0xFF){
-            system_state = MAIN;
+            system_state = INIT_MAIN;
             }       
         break;
+    case INIT_MAIN:
+        drawMain();
+        system_state = MAIN;
+        break;
     case MAIN:
-        drawUI();
+        mainHandler();
         break;
     case INIT_VAR_VIEWER:
         tft.fillScreen(LOCKPAGE_BGCOLOR);
@@ -96,46 +132,171 @@ void lcd_off(void){
     digitalWrite(PB4, LOW);
 }
 void drawVarviewer(void){
-    tft.setFont(&FreeSerif18pt7b);
-    tft.setTextSize(0);
-    tft.setCursor(0, (VARV_CRANKRPM_ROW*22)+(VARV_CRANKRPM_ROW*2));
-    tft.setTextColor(GREEN);
-    tft.print("CrankRPM");
+    setFontMono9();
+    tft.fillRect(0,0,400,40, GREY);
+    tft.setTextColor(BLACK);
+    tft.setTextSize(1);
+    tft.setCursor(2, (20)+(1*2));
+    tft.print("Variable viewer");
 }
 void varviewerHandler(void){
+
     screenTime = sysTime - prevscreenTime;
     if(screenTime > VAR_VIEWER_UPDATE_TIME){
         float readCrankRPM = CrankRPM;
-        if(CrankRPM == prevCrankRPM){
-
-        }
-        else{
-            tft.setFont(&FreeSerif18pt7b);
-            tft.setTextSize(0);
-            tft.setCursor(VARV_COLUMN_1, (VARV_CRANKRPM_ROW*22)+(VARV_CRANKRPM_ROW*2));
-            tft.setTextColor(LOCKPAGE_BGCOLOR);
-            tft.print(prevCrankRPM);
-            tft.setTextColor(LOCKPAGE_TEXTCOLOR);
-            tft.setCursor(VARV_COLUMN_1, (VARV_CRANKRPM_ROW*22)+(VARV_CRANKRPM_ROW*2));
-            tft.print(readCrankRPM);
-            prevCrankRPM = readCrankRPM;
-            }
-
-        if ( UART.getVescValues() ) {
-            tft.setCursor(VARV_COLUMN_1, (2*22)+(2*2));
-            tft.print(UART.data.rpm);
-            tft.setCursor(VARV_COLUMN_1, (3*22)+(3*2));
-            tft.print(UART.data.inpVoltage);
-            tft.setCursor(VARV_COLUMN_1, (4*22)+(4*2));
-            tft.print(UART.data.ampHours);
-            tft.setCursor(VARV_COLUMN_1, (5*22)+(5*2));
-            tft.print(UART.data.tachometerAbs);
-            }
-        else{
-            tft.setCursor(0, (2*22)+(2*2));
-            tft.print("Failed to get VESC data");
-            }
+ 
         prevscreenTime = sysTime;
     }
 
 }
+void mainHandler(void){
+
+    screenTime = sysTime - prevscreenTime;
+    if(screenTime > VAR_VIEWER_UPDATE_TIME){
+        //do updates on the screen one by one
+        //:::::::::::::::::::::::::: RTC CLOCK UPDATE START ::::::::::::::::::::::::::::
+        rtctime[0] = rtc.getHours();
+        rtctime[1] = rtc.getMinutes(); 
+        if(rtctime[0] == rtctime[2]){
+            //no need to update hours
+        }
+        else{
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(170,25);
+            print2digits(rtctime[2]);
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(170,25);
+            print2digits(rtctime[0]);
+            }
+        if(rtctime[1] == rtctime[3]){
+            //no need to update minutes
+        }
+        else{
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(204,25);
+            print2digits(rtctime[3]);
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(204,25);
+            print2digits(rtctime[1]);
+            }
+        rtctime[2] = rtctime[0];
+        rtctime[3] = rtctime[1];
+        //:::::::::::::::::::::::::: RTC CLOCK UPDATE END ::::::::::::::::::::::::::::
+
+
+        prevscreenTime = sysTime;
+    }
+
+}
+void drawMain(void){
+    //::::::::::::::::::::::::: STILL ELEMENTS ::::::::::::::::::::::::::::
+    tft.fillScreen(LOCKPAGE_BGCOLOR);
+    //draw battery gauge elements
+    tft.fillRoundRect(BATTGAUGE_XPOS+10,BATTGAUGE_YPOS-4,20,6,1,GREY);
+    tft.fillRoundRect(BATTGAUGE_XPOS,BATTGAUGE_YPOS,40,115,5,GREY);
+    tft.fillRoundRect(BATTGAUGE_XPOS+2,BATTGAUGE_YPOS+2,36,111,5,BLACK);
+    //draw speed gauge elements
+    tft.fillCircle(SPEEDGAUGE_XPOS,SPEEDGAUGE_YPOS,100,BLACK);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,89,8,145,396,BLUEGREY);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,88,15,144,146,GREY);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,88,15,194,196,GREY);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,88,15,244,246,GREY);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,88,15,294,296,GREY);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,88,15,344,346,GREY);
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS,88,15,394,396,GREY);
+    //KM/H
+    tft.setFont(&FreeBigFont);
+    tft.setCursor(SPEEDGAUGE_XPOS+22,SPEEDGAUGE_YPOS-4);
+    tft.setTextSize(1);
+    tft.setTextColor(WHITE);
+    tft.print("KM");
+    tft.setCursor(SPEEDGAUGE_XPOS+22,SPEEDGAUGE_YPOS+16);
+    tft.print("H");
+    //assist level
+    tft.setFont(&FreeMono9pt7b);
+    tft.setTextColor(WHITE);
+    tft.setCursor(330,16);  
+    tft.print("ASSIST");
+    //E RPM
+    tft.setFont(&FreeMono9pt7b);
+    tft.setTextColor(WHITE);
+    tft.setCursor(350,70);  
+    tft.print("ERPM");
+    //clock
+    tft.setFont(&FreeSansBold12pt7b);
+    tft.setTextColor(WHITE);
+    tft.setCursor(197,23);
+    tft.print(":");
+    //draw menu button
+    tft.fillRoundRect(MENUBUTTON_XPOS,MENUBUTTON_YPOS,40,40,2,BLACK);
+    tft.fillRoundRect(MENUBUTTON_XPOS+4,MENUBUTTON_YPOS +6,32,4,2,0xA671);
+    tft.fillRoundRect(MENUBUTTON_XPOS+4,MENUBUTTON_YPOS +14,32,4,2,0xA671);
+    tft.fillRoundRect(MENUBUTTON_XPOS+4,MENUBUTTON_YPOS +22,32,4,2,0xA671);
+    tft.fillRoundRect(MENUBUTTON_XPOS+4,MENUBUTTON_YPOS +30,32,4,2,0xA671);
+
+    //tft.fillRoundRect(MENUBUTTON_XPOS+28,MENUBUTTON_YPOS +4,32,4,2,BLACK);
+    //tft.fillCircle(x,y, 98,GREY);
+    //tft.fillCircle(x,y, 94,BLACK);
+    
+    // tft.fillRoundRect(180,80,40,56,5,BLUEGREY);
+    // tft.fillRoundRect(182,82,36,52,5, BLACK);
+
+    // tft.setFont(&FreeSevenSegNumFont);
+    // tft.setCursor(185,133);
+    // tft.setTextSize(1);
+    // tft.setTextColor(WHITE);
+    // tft.print("1");
+
+
+    //changing elements:
+    //battery gauge rectangles that indicate battery level (10)
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+4 ,32,10,2, GREEN);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+16,32,10,2, GREEN);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+28,32,10,2, GREEN);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+40,32,10,2, GREEN);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+52,32,10,2, GREEN);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+64,32,10,2, GREEN);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+76,32,10,2, YELLOW);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+88,32,10,2, YELLOW);
+    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+100,32,10,2, RED);
+
+
+
+
+    //battery level
+    tft.setFont(&FreeSansBold12pt7b);
+    tft.setTextColor(WHITE);
+    tft.setCursor(10,170);  
+    tft.print("50.4 V");
+    //assist level
+    tft.setFont(&FreeSansBold18pt7b);
+    tft.setTextColor(WHITE);
+    tft.setCursor(372,46);  
+    tft.print("3");
+    //ERPM
+    tft.setFont(&FreeSansBold12pt7b);
+    tft.setTextColor(WHITE);
+    tft.setCursor(340,94);  
+    tft.print("3666");
+    //
+    tft.setFont(&FreeSevenSegNumFont);
+    tft.setCursor(SPEEDGAUGE_XPOS-42,SPEEDGAUGE_YPOS+20);
+    tft.setTextSize(1);
+    tft.setTextColor(WHITE);
+    tft.print("26");
+
+
+
+    tft.fillArcOffsetted(SPEEDGAUGE_XPOS, SPEEDGAUGE_YPOS, 99,6,144,300,0x3391);
+}
+void print2digits(int number) {
+  if (number < 10) {
+    tft.print("0"); // print a 0 before if the number is < than 10
+  }
+  tft.print(number);
+}
+

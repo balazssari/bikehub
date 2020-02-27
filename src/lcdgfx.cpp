@@ -1,11 +1,15 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "lcdgfx.h"
 
 MCUFRIEND_kbv tft;
-
-void drawUI(){
-    tft.fillScreen(BLACK);
+void setFontSerif18(void){
+    tft.setFont(&FreeSerif18pt7b);
 }
+void setFontMono9(void){
+    tft.setFont(&FreeMono9pt7b);
+}
+
+
 
 void drawNumpad(uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth){
     int numHeight = 24;
@@ -80,7 +84,7 @@ void drawNumpad(uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth){
 }
 void drawWelcome(void){
     tft.fillScreen(LOCKPAGE_BGCOLOR);
-    tft.setFont(&FreeSerif18pt7b);
+    setFontSerif18();
     tft.setTextSize(0);
     tft.setTextColor(LOCKPAGE_TEXTCOLOR);
     tft.setCursor(0, (1*22)+(1*2));
