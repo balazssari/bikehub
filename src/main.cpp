@@ -23,6 +23,10 @@ uint8_t system_state = INIT_MAIN;
 	};
 struct dataPackage prevPackage;
 struct dataPackage Package;
+uint8_t assistlevel = 3;
+uint8_t prevAssistlevel = 3;
+uint8_t batterygaugelevel = 5;
+uint8_t prevBatterygaugelevel = 5;
 uint32_t elapsedTime = 0; 
 uint32_t sysTime = 0;
 uint32_t prevsysTime = 0;
@@ -154,7 +158,9 @@ void mainHandler(void){
     screenTime = sysTime - prevscreenTime;
     if(screenTime > VAR_VIEWER_UPDATE_TIME){
         //do updates on the screen one by one
-        //:::::::::::::::::::::::::: RTC CLOCK UPDATE START ::::::::::::::::::::::::::::
+        UART.getVescValues();
+        
+        //*** RTC CLOCK UPDATE START ***
         rtctime[0] = rtc.getHours();
         rtctime[1] = rtc.getMinutes(); 
         if(rtctime[0] == rtctime[2]){
@@ -185,15 +191,110 @@ void mainHandler(void){
             }
         rtctime[2] = rtctime[0];
         rtctime[3] = rtctime[1];
-        //:::::::::::::::::::::::::: RTC CLOCK UPDATE END ::::::::::::::::::::::::::::
+        //*** RTC CLOCK UPDATE END ***
+        //*** INPUT VOLTAGE UPDATE START ***
+        if (UART.data.inpVoltage == prevPackage.inpVoltage){
+            //no need to update Input Voltage value
+        }
+        else{
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(10,170);  
+            tft.print(prevPackage.inpVoltage);
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(10,170);  
+            tft.print(UART.data.inpVoltage);
+            prevPackage.inpVoltage = UART.data.inpVoltage;
+        }
+        //*** INPUT VOLTAGE UPDATE END ***
+        //*** RPM UPDATE START ***
+        if (UART.data.rpm == prevPackage.rpm){
+            //no need to update RPM value
+        }
+        else{
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(340,94);  
+            tft.print(prevPackage.rpm);
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(340,94);  
+            tft.print(UART.data.rpm);
+            prevPackage.rpm = UART.data.rpm;
+        }
+        //*** RPM UPDATE END ***
+        //*** ASSIST LEVEL UPDATE START ***
+        if (assistlevel == prevAssistlevel){
+            //no need to update assist level
+        }
+        else{
+            tft.setFont(&FreeSansBold18pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(372,46);  
+            tft.print(prevAssistlevel);
+            tft.setFont(&FreeSansBold18pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(372,46);  
+            tft.print(assistlevel);
+            prevAssistlevel = assistlevel;
+        }
+        //*** ASSIST LEVEL UPDATE END ***
+        //*** BATTERY GAUGE UPDATE START ***
+        if (batterygaugelevel == prevBatterygaugelevel){
+            //no need to update battery gauge
+        }
+        else{
+            if (batterygaugelevel > prevBatterygaugelevel){
+                switch (batterygaugelevel)
+                {
+                case 0:
 
-
+                    break;
+                case 1:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+4 ,32,10,2, GREEN);
+                    break;
+                case 2:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+16,32,10,2, GREEN);
+                    break;
+                case 3:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+28,32,10,2, GREEN);
+                    break;
+                case 4:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+40,32,10,2, GREEN);
+                    break;
+                case 5:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+52,32,10,2, GREEN);
+                    break;
+                case 6:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+64,32,10,2, GREEN);
+                    break;
+                case 7:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+76,32,10,2, YELLOW);
+                    break;
+                case 8:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+88,32,10,2, YELLOW);
+                    break;
+                case 9:
+                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+100,32,10,2, RED);
+                    break;
+                default:
+                    break;
+                }
+            }
+            else if (batterygaugelevel < prevBatterygaugelevel){
+                for (int i = prevBatterygaugelevel; i < batterygaugelevel; i--){
+                //remove elements todo
+                }
+            }
+        }
+        //*** BATTERY GAUGE UPDATE END ***
         prevscreenTime = sysTime;
     }
 
 }
 void drawMain(void){
-    //::::::::::::::::::::::::: STILL ELEMENTS ::::::::::::::::::::::::::::
+    //*** STILL ELEMENTS ***
     tft.fillScreen(LOCKPAGE_BGCOLOR);
     //draw battery gauge elements
     tft.fillRoundRect(BATTGAUGE_XPOS+10,BATTGAUGE_YPOS-4,20,6,1,GREY);
@@ -254,40 +355,35 @@ void drawMain(void){
 
     //changing elements:
     //battery gauge rectangles that indicate battery level (10)
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+4 ,32,10,2, GREEN);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+16,32,10,2, GREEN);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+28,32,10,2, GREEN);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+40,32,10,2, GREEN);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+52,32,10,2, GREEN);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+64,32,10,2, GREEN);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+76,32,10,2, YELLOW);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+88,32,10,2, YELLOW);
-    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+100,32,10,2, RED);
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 
 
     //battery level
-    tft.setFont(&FreeSansBold12pt7b);
-    tft.setTextColor(WHITE);
-    tft.setCursor(10,170);  
-    tft.print("50.4 V");
+    // tft.setFont(&FreeSansBold12pt7b);
+    // tft.setTextColor(WHITE);
+    // tft.setCursor(10,170);  
+    // tft.print("50.4 V");
     //assist level
-    tft.setFont(&FreeSansBold18pt7b);
-    tft.setTextColor(WHITE);
-    tft.setCursor(372,46);  
-    tft.print("3");
+    // tft.setFont(&FreeSansBold18pt7b);
+    // tft.setTextColor(WHITE);
+    // tft.setCursor(372,46);  
+    // tft.print("3");
     //ERPM
-    tft.setFont(&FreeSansBold12pt7b);
-    tft.setTextColor(WHITE);
-    tft.setCursor(340,94);  
-    tft.print("3666");
-    //
-    tft.setFont(&FreeSevenSegNumFont);
-    tft.setCursor(SPEEDGAUGE_XPOS-42,SPEEDGAUGE_YPOS+20);
-    tft.setTextSize(1);
-    tft.setTextColor(WHITE);
-    tft.print("26");
+    // tft.setFont(&FreeSevenSegNumFont);
+    // tft.setCursor(SPEEDGAUGE_XPOS-42,SPEEDGAUGE_YPOS+20);
+    // tft.setTextSize(1);
+    // tft.setTextColor(WHITE);
+    // tft.print("26");
 
 
 
