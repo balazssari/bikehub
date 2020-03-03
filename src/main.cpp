@@ -1,6 +1,6 @@
 #include "main.h"
 
-//#define debug
+#define debug
 #define VAR_VIEWER_UPDATE_TIME 10
 
 STM32RTC& rtc = STM32RTC::getInstance();
@@ -25,8 +25,8 @@ struct dataPackage prevPackage;
 struct dataPackage Package;
 uint8_t assistlevel = 3;
 uint8_t prevAssistlevel = 3;
-uint8_t batterygaugelevel = 5;
-uint8_t prevBatterygaugelevel = 5;
+uint8_t batterygaugelevel = 0;
+uint8_t prevBatterygaugelevel = 0;
 uint32_t elapsedTime = 0; 
 uint32_t sysTime = 0;
 uint32_t prevsysTime = 0;
@@ -34,7 +34,10 @@ uint32_t screenTime = 0;
 uint32_t prevscreenTime = 0;
 uint8_t varviewerStep = 0;
 uint8_t rtctime[4];
-
+#ifdef debug
+uint8_t dummyupdate = 0;
+uint8_t reachedTop = 0;
+#endif
 
 
 void setup(void);
@@ -69,8 +72,20 @@ void setup(void) {
 }
 
 void loop(void) {
-
     sysTime = millis();
+    #ifdef debug
+    if(sysTime > dummyupdate * 5000){
+        if(reachedTop == 0){
+            batterygaugelevel+=3;
+        }
+        else if (reachedTop == 1){
+            batterygaugelevel--;
+        }
+        if(batterygaugelevel == 0) reachedTop = 0;
+        if(batterygaugelevel == 9) reachedTop = 1;
+        dummyupdate++;
+        }
+    #endif
     pasHandler();
     switch (system_state)
     {
@@ -246,45 +261,17 @@ void mainHandler(void){
         }
         else{
             if (batterygaugelevel > prevBatterygaugelevel){
-                switch (batterygaugelevel)
-                {
-                case 0:
-
-                    break;
-                case 1:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+4 ,32,10,2, GREEN);
-                    break;
-                case 2:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+16,32,10,2, GREEN);
-                    break;
-                case 3:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+28,32,10,2, GREEN);
-                    break;
-                case 4:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+40,32,10,2, GREEN);
-                    break;
-                case 5:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+52,32,10,2, GREEN);
-                    break;
-                case 6:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+64,32,10,2, GREEN);
-                    break;
-                case 7:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+76,32,10,2, YELLOW);
-                    break;
-                case 8:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+88,32,10,2, YELLOW);
-                    break;
-                case 9:
-                    tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+100,32,10,2, RED);
-                    break;
-                default:
-                    break;
+                for(int i = prevBatterygaugelevel; i < batterygaugelevel; i++){
+                    if(i < 1)           tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+(100-i*12),32,10,2, RED);
+                    if(i > 0 && i < 3)  tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+(100-i*12),32,10,2, YELLOW);
+                    if(i > 2 && i < 10) tft.fillRoundRect(BATTGAUGE_XPOS+4,BATTGAUGE_YPOS+(100-i*12),32,10,2, GREEN);
                 }
             }
             else if (batterygaugelevel < prevBatterygaugelevel){
                 for (int i = prevBatterygaugelevel; i < batterygaugelevel; i--){
-                //remove elements todo
+                
+                //remove elements
+
                 }
             }
         }
