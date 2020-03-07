@@ -46,6 +46,8 @@ uint8_t assistlevel = 3;
 uint8_t prevAssistlevel = 3;
 uint8_t batterygaugelevel = 0;
 uint8_t prevBatterygaugelevel = 0;
+extern float CrankRPM;
+float prevCrankRPM;
 uint32_t elapsedTime = 0; 
 uint32_t sysTime = 0;
 uint32_t prevsysTime = 0;
@@ -344,6 +346,22 @@ void updateMainscreenChangingElemenets(void){
             prevAssistlevel = assistlevel;
         }
         //*** ASSIST LEVEL UPDATE END ***
+        //*** CRANK RPM UPDATE START ***
+        if (CrankRPM == prevCrankRPM){
+            //no need to update assist level
+        }
+        else{
+            tft.setFont(&FreeSansBold18pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(372,126);  
+            tft.print(prevCrankRPM);
+            tft.setFont(&FreeSansBold18pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(372,126);  
+            tft.print(CrankRPM);
+            prevCrankRPM = CrankRPM;
+        }
+        //*** CRANK RPM UPDATE END ***
         //*** BATTERY GAUGE UPDATE START ***
         if (batterygaugelevel == prevBatterygaugelevel){
             //no need to update battery gauge

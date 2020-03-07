@@ -18,7 +18,6 @@ uint32_t input_capture = 0;
 uint32_t prev_input_capture = 0;
 uint32_t capture_interval = 0;
 float CrankRPM = 0;
-float prevCrankRPM;
 float currentToVESC = 0;
 
 void pasInit(void){
@@ -42,7 +41,10 @@ void pasCallback(void){
         capture_interval = input_capture - prev_input_capture;
         prev_input_capture = input_capture;
         CrankRPM = 60 / ((capture_interval * PAS_MAGNETS) * 0.001);
-        currentToVESC = CrankRPM / 200;
+        if (CrankRPM == (float)infinity()) CrankRPM = 0;
+        currentToVESC = CrankRPM / 250;
+        if (currentToVESC > 30) currentToVESC = 30;
+        if (currentToVESC == (float)infinity()) currentToVESC = 0;
         UART.setCurrent(currentToVESC);
     }
 }
