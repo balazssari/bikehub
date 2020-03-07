@@ -43,7 +43,6 @@ uint32_t numPadHandler(void){
     }
     if(touchTrig == 1){
         ctr++;
-        if(isNumPadOn == 1){
         }
         switch (system_state)
         {
@@ -116,14 +115,24 @@ uint32_t numPadHandler(void){
         case MAIN:
         
             break;
-        case VAR_VIEWER:
-
+        case INIT_MOTORWIZARD:
+            uint16_t pressed_section;
+            pressed_section = fullscreenTouchHandler(axes);
+            if (pressed_section == 601 || pressed_section == 602){
+                return 30;
+            }
+            if (pressed_section == 609 || pressed_section == 610){
+                return 31;
+            }
             break;
+        case VAR_VIEWER:
+        break;
+
         default:
             break;
         }
     touchTrig = 0;
-    }
+
 }
 uint8_t numpadTouchHandler(uint16_t axes[2], uint8_t x, uint8_t y, uint8_t bheight, uint8_t bwidth){
     uint8_t ret = 0;

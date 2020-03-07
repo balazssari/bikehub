@@ -3,6 +3,8 @@
 #define LOCKSCREEN          2
 #define INIT_MAIN           3
 #define MAIN                4
+#define INIT_MOTORWIZARD    5
+#define MOTORWIZARD         6
 #define INIT_VAR_VIEWER     99
 #define VAR_VIEWER          100
 

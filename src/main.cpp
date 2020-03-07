@@ -9,7 +9,7 @@ extern MCUFRIEND_kbv tft;
 HardwareSerial Serial3(USART3);
 VescUart UART;
 
-uint8_t system_state = INIT_SYS;
+uint8_t system_state = INIT_MAIN;
 #ifdef debug
 uint8_t system_state = INIT_MAIN;
 #endif
@@ -139,6 +139,12 @@ void loop(void) {
         break;
     case MAIN:
         mainHandler();
+        break;
+    case INIT_MOTORWIZARD:
+        drawMotorWizard();
+        break;
+    case MOTORWIZARD:
+        motorWizardHandler();
         break;
     case INIT_VAR_VIEWER:
         tft.fillScreen(LOCKPAGE_BGCOLOR);
