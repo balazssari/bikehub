@@ -2,6 +2,7 @@
 
 //#define debug
 #define VAR_VIEWER_UPDATE_TIME 10
+SystemClock_Config
 
 STM32RTC& rtc = STM32RTC::getInstance();
 
@@ -48,6 +49,8 @@ uint8_t batterygaugelevel = 0;
 uint8_t prevBatterygaugelevel = 0;
 extern float CrankRPM;
 float prevCrankRPM;
+extern uint32_t capture_interval;
+uint32_t previnput_capture;
 uint32_t elapsedTime = 0; 
 uint32_t sysTime = 0;
 uint32_t prevsysTime = 0;
@@ -351,17 +354,33 @@ void updateMainscreenChangingElemenets(void){
             //no need to update assist level
         }
         else{
-            tft.setFont(&FreeSansBold18pt7b);
+            tft.setFont(&FreeSansBold12pt7b);
             tft.setTextColor(LOCKPAGE_BGCOLOR);
-            tft.setCursor(372,126);  
+            tft.setCursor(330,126);  
             tft.print(prevCrankRPM);
-            tft.setFont(&FreeSansBold18pt7b);
+            tft.setFont(&FreeSansBold12pt7b);
             tft.setTextColor(WHITE);
-            tft.setCursor(372,126);  
+            tft.setCursor(330,126);  
             tft.print(CrankRPM);
             prevCrankRPM = CrankRPM;
         }
         //*** CRANK RPM UPDATE END ***
+        //*** DEBUG UPDATE START ***
+        if (capture_interval == previnput_capture){
+            //no need to update assist level
+        }
+        else{
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(330,156);  
+            tft.print(previnput_capture);
+            tft.setFont(&FreeSansBold12pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(330,156);  
+            tft.print(capture_interval);
+            previnput_capture = capture_interval;
+        }
+        //*** DEBUG UPDATE END ***
         //*** BATTERY GAUGE UPDATE START ***
         if (batterygaugelevel == prevBatterygaugelevel){
             //no need to update battery gauge
