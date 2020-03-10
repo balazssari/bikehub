@@ -1,8 +1,7 @@
 #include "main.h"
 
 //#define debug
-#define VAR_VIEWER_UPDATE_TIME 10
-SystemClock_Config
+#define VAR_VIEWER_UPDATE_TIME 50
 
 STM32RTC& rtc = STM32RTC::getInstance();
 
@@ -51,6 +50,15 @@ extern float CrankRPM;
 float prevCrankRPM;
 extern uint32_t capture_interval;
 uint32_t previnput_capture;
+uint8_t motorMagnetPoles = 23;
+float wheelRPM = 0;
+float prevWheelRPM = 0;
+extern float currentToVESC;
+float prevcurrentToVESC;
+
+extern uint32_t PeriodMeasured;
+uint32_t prevPeriodMeasured;
+
 uint32_t elapsedTime = 0; 
 uint32_t sysTime = 0;
 uint32_t prevsysTime = 0;
@@ -87,7 +95,7 @@ void setup(void) {
     rtc.setMinutes(59);
     rtc.setSeconds(0);
     
-    Serial3.begin(19200);
+    Serial3.begin(115200);
     UART.setSerialPort(&Serial3);
 
             gpioInit();
@@ -116,7 +124,7 @@ void loop(void) {
         dummyupdate++;
         }
     #endif
-    pasHandler();
+    //pasHandler();
     switch (system_state)
     {
     case INIT_SYS:
@@ -207,6 +215,7 @@ void mainHandler(void){
     if(screenTime > VAR_VIEWER_UPDATE_TIME){
         //do updates on the screen one by one
         UART.getVescValues();
+        wheelRPM = (float)UART.data.rpm / motorMagnetPoles;
         //*** RTC CLOCK UPDATE START ***
         rtctime[0] = rtc.getHours();
         rtctime[1] = rtc.getMinutes(); 
@@ -349,36 +358,64 @@ void updateMainscreenChangingElemenets(void){
             prevAssistlevel = assistlevel;
         }
         //*** ASSIST LEVEL UPDATE END ***
+        //*** DEBUG UPDATE START ***
         //*** CRANK RPM UPDATE START ***
         if (CrankRPM == prevCrankRPM){
             //no need to update assist level
         }
         else{
-            tft.setFont(&FreeSansBold12pt7b);
+            tft.setFont(&FreeMono9pt7b);
             tft.setTextColor(LOCKPAGE_BGCOLOR);
             tft.setCursor(330,126);  
             tft.print(prevCrankRPM);
-            tft.setFont(&FreeSansBold12pt7b);
+            tft.setFont(&FreeMono9pt7b);
             tft.setTextColor(WHITE);
             tft.setCursor(330,126);  
             tft.print(CrankRPM);
             prevCrankRPM = CrankRPM;
         }
         //*** CRANK RPM UPDATE END ***
-        //*** DEBUG UPDATE START ***
-        if (capture_interval == previnput_capture){
+        if (PeriodMeasured == prevPeriodMeasured){
             //no need to update assist level
         }
         else{
-            tft.setFont(&FreeSansBold12pt7b);
+            tft.setFont(&FreeMono9pt7b);
             tft.setTextColor(LOCKPAGE_BGCOLOR);
-            tft.setCursor(330,156);  
-            tft.print(previnput_capture);
-            tft.setFont(&FreeSansBold12pt7b);
+            tft.setCursor(330,146);  
+            tft.print(prevPeriodMeasured);
+            tft.setFont(&FreeMono9pt7b);
             tft.setTextColor(WHITE);
-            tft.setCursor(330,156);  
-            tft.print(capture_interval);
-            previnput_capture = capture_interval;
+            tft.setCursor(330,146);  
+            tft.print(PeriodMeasured);
+            prevPeriodMeasured = PeriodMeasured;
+        }
+        if (currentToVESC == prevcurrentToVESC){
+            //no need to update assist level
+        }
+        else{
+            tft.setFont(&FreeMono9pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(330,166);  
+            tft.print(prevcurrentToVESC);
+            tft.setFont(&FreeMono9pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(330,166);  
+            tft.print(currentToVESC);
+            prevcurrentToVESC = currentToVESC;
+        }
+        if (wheelRPM == prevWheelRPM){
+            //no need to update assist level
+        }
+        else{
+            tft.setFont(&FreeMono9pt7b);
+            tft.setTextColor(LOCKPAGE_BGCOLOR);
+            tft.setCursor(330,186);  
+            tft.print(prevWheelRPM);
+            tft.setFont(&FreeMono9pt7b);
+            tft.setTextColor(WHITE);
+            tft.setCursor(330,186);  
+            tft.print(wheelRPM);
+            prevWheelRPM = wheelRPM;
         }
         //*** DEBUG UPDATE END ***
         //*** BATTERY GAUGE UPDATE START ***
